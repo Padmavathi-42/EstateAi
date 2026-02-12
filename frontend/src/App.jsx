@@ -11,6 +11,8 @@ import {
 
 export default function App() {
 
+  const BASE_URL = "https://estateai-backend-o9n9.onrender.com";
+
   const [area, setArea] = useState(1000);
   const [bedrooms, setBedrooms] = useState(2);
   const [bathrooms, setBathrooms] = useState(2);
@@ -21,19 +23,28 @@ export default function App() {
   const [accuracy, setAccuracy] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "https://estateai-backend-o9n9.onrender.com";
-
   useEffect(() => {
     fetch(`${BASE_URL}/locations`)
       .then(res => res.json())
       .then(data => setLocations(data.locations))
-      .catch(err => console.error("Error fetching locations:", err));
+      .catch(err => console.error(err));
 
     fetch(`${BASE_URL}/model-info`)
       .then(res => res.json())
       .then(data => setAccuracy(data.accuracy))
-      .catch(err => console.error("Error fetching model info:", err));
+      .catch(err => console.error(err));
   }, []);
+
+  const formatIndianPrice = (value) => {
+    if (!value) return "";
+    if (value >= 10000000) {
+      return `₹ ${(value / 10000000).toFixed(2)} Cr`;
+    } else if (value >= 100000) {
+      return `₹ ${(value / 100000).toFixed(2)} Lakh`;
+    } else {
+      return `₹ ${value.toLocaleString("en-IN")}`;
+    }
+  };
 
   const predictPrice = async () => {
     try {
@@ -41,21 +52,14 @@ export default function App() {
 
       const response = await fetch(`${BASE_URL}/predict`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          area,
-          bedrooms,
-          bathrooms,
-          location
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ area, bedrooms, bathrooms, location })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.detail || "Prediction failed");
+        alert(data.detail);
         return;
       }
 
@@ -66,8 +70,7 @@ export default function App() {
       });
 
     } catch (error) {
-      console.error(error);
-      alert("Server connection failed.");
+      alert("Prediction failed.");
     } finally {
       setLoading(false);
     }
@@ -94,11 +97,14 @@ export default function App() {
 
       <section id="predict" className="card">
 
-        <h1>Smart Property Valuation</h1>
+        <h1>AI Powered Real Estate Price Prediction Platform</h1>
+        <p className="subtitle">
+          Accurate property valuation based on area, configuration and location intelligence.
+        </p>
 
         {accuracy && (
           <div className="accuracy">
-            Model Accuracy {accuracy}%
+            Model Accuracy: {accuracy}%
           </div>
         )}
 
@@ -138,19 +144,18 @@ export default function App() {
         </select>
 
         <button onClick={predictPrice}>
-          {loading ? <div className="spinner"></div> : "Estimate Price"}
+          {loading ? <div className="spinner"></div> : "Estimate Property Value"}
         </button>
 
         {price && (
           <div className="result">
-            <h2>₹ {price.toLocaleString("en-IN")}</h2>
+            <h2>{formatIndianPrice(price)}</h2>
             <p>
-              ₹ {range.min.toLocaleString("en-IN")} – ₹{" "}
-              {range.max.toLocaleString("en-IN")}
+              {formatIndianPrice(range.min)} – {formatIndianPrice(range.max)}
             </p>
 
             <div className="chart-container">
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={chartData}>
                   <XAxis dataKey="name" stroke="#ccc" />
                   <YAxis stroke="#ccc" />
@@ -170,57 +175,10 @@ export default function App() {
       </section>
 
       <footer className="footer">
-
         <div className="footer-divider"></div>
-
-        <div className="footer-container">
-
-          <div className="footer-brand">
-            <h3>EstateAI</h3>
-            <div className="accent-line"></div>
-            <p>
-              Intelligent property valuation powered by machine learning.
-            </p>
-
-            <div className="social-icons">
-              <a href="#" target="_blank" rel="noreferrer">
-                <i className="fab fa-linkedin"></i>
-              </a>
-              <a href="#" target="_blank" rel="noreferrer">
-                <i className="fab fa-github"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="footer-links">
-            <h4>Product</h4>
-            <a href="#predict">Valuation</a>
-            <a href="#">Analytics</a>
-            <a href="#">API Access</a>
-          </div>
-
-          <div className="footer-links">
-            <h4>Company</h4>
-            <a href="#">About</a>
-            <a href="#">Careers</a>
-            <a href="#">Contact</a>
-          </div>
-
-          <div className="footer-newsletter">
-            <h4>Subscribe</h4>
-            <p>Get product updates and insights.</p>
-            <div className="newsletter-box">
-              <input type="email" placeholder="Enter your email" />
-              <button>Subscribe</button>
-            </div>
-          </div>
-
-        </div>
-
         <div className="footer-bottom">
           © {new Date().getFullYear()} EstateAI. All rights reserved.
         </div>
-
       </footer>
 
     </div>
