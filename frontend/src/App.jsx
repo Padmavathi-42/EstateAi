@@ -11,9 +11,9 @@ import {
 
 export default function App() {
 
-  const [area, setArea] = useState("");
-  const [bedrooms, setBedrooms] = useState("");
-  const [bathrooms, setBathrooms] = useState("");
+  const [area, setArea] = useState(1000);
+const [bedrooms, setBedrooms] = useState(2);
+const [bathrooms, setBathrooms] = useState(2);
   const [location, setLocation] = useState("");
   const [locations, setLocations] = useState([]);
   const [price, setPrice] = useState(null);
@@ -31,30 +31,59 @@ export default function App() {
 
   // ✅ Always show in Lakhs / Crores only
   const formatIndianPrice = (value) => {
-    if (!value) return "";
-    if (value >= 10000000) {
-      return `₹ ${(value / 10000000).toFixed(2)} Crores`;
-    } else {
-      return `₹ ${(value / 100000).toFixed(2)} Lakhs`;
-    }
-  };
+  if (!value || value <= 0) return "₹ 0";
+
+  if (value >= 10000000) {
+    return `₹ ${(value / 10000000).toFixed(2)} Crores`;
+  } else {
+    return `₹ ${(value / 100000).toFixed(2)} Lakhs`;
+  }
+};
 
   const predictPrice = async () => {
-    try {
-      setLoading(true);
 
-      const response = await fetch(`${BASE_URL}/predict`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          area: Number(area),
-          bedrooms: Number(bedrooms),
-          bathrooms: Number(bathrooms),
-          location
-        })
-      });
+  if (!area || !bedrooms || !bathrooms || !location) {
+    alert("Please fill all fields correctly.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await fetch(`${BASE_URL}/predict`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        area: Number(area),
+        bedrooms: Number(bedrooms),
+        bathrooms: Number(bathrooms),
+        location
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.detail || "Prediction failed");
+      return;
+    }
+
+    setPrice(data.predicted_price);
+    setRange({
+      min: data.min_price,
+      max: data.max_price
+    });
+
+  } catch (error) {
+    console.error(error);
+    alert("Server connection failed.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
       const data = await response.json();
 
