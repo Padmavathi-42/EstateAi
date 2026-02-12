@@ -11,14 +11,13 @@ import {
 
 export default function App() {
 
-  const [area, setArea] = useState(1000);
-  const [bedrooms, setBedrooms] = useState(2);
-  const [bathrooms, setBathrooms] = useState(2);
+  const [area, setArea] = useState("");
+  const [bedrooms, setBedrooms] = useState("");
+  const [bathrooms, setBathrooms] = useState("");
   const [location, setLocation] = useState("");
   const [locations, setLocations] = useState([]);
   const [price, setPrice] = useState(null);
   const [range, setRange] = useState(null);
-  const [accuracy, setAccuracy] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const BASE_URL = "https://estateai-backend-o9n9.onrender.com";
@@ -28,22 +27,15 @@ export default function App() {
       .then(res => res.json())
       .then(data => setLocations(data.locations))
       .catch(err => console.error("Error fetching locations:", err));
-
-    fetch(`${BASE_URL}/model-info`)
-      .then(res => res.json())
-      .then(data => setAccuracy(data.accuracy))
-      .catch(err => console.error("Error fetching model info:", err));
   }, []);
 
-  // ✅ NEW: Indian Price Formatter
+  // ✅ Always show in Lakhs / Crores only
   const formatIndianPrice = (value) => {
     if (!value) return "";
     if (value >= 10000000) {
-      return `₹ ${(value / 10000000).toFixed(2)} Cr`;
-    } else if (value >= 100000) {
-      return `₹ ${(value / 100000).toFixed(2)} Lakh`;
+      return `₹ ${(value / 10000000).toFixed(2)} Crores`;
     } else {
-      return `₹ ${value.toLocaleString("en-IN")}`;
+      return `₹ ${(value / 100000).toFixed(2)} Lakhs`;
     }
   };
 
@@ -57,9 +49,9 @@ export default function App() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          area,
-          bedrooms,
-          bathrooms,
+          area: Number(area),
+          bedrooms: Number(bedrooms),
+          bathrooms: Number(bathrooms),
           location
         })
       });
@@ -106,24 +98,12 @@ export default function App() {
 
       <section id="predict" className="card">
 
-        {/* ✅ Updated Heading */}
         <h1>AI Powered Real Estate Price Prediction</h1>
-
-        {/* ✅ Small subtitle (does not disturb UI) */}
-        <p style={{ opacity: 0.7, fontSize: "14px", marginBottom: "15px" }}>
-          Intelligent property valuation based on area, configuration and location.
-        </p>
-
-        {accuracy && (
-          <div className="accuracy">
-            Model Accuracy {accuracy}%
-          </div>
-        )}
 
         <input
           type="number"
           value={area}
-          onChange={e => setArea(Number(e.target.value))}
+          onChange={e => setArea(e.target.value)}
           placeholder="Area (sq.ft)"
         />
 
@@ -131,14 +111,14 @@ export default function App() {
           <input
             type="number"
             value={bedrooms}
-            onChange={e => setBedrooms(Number(e.target.value))}
+            onChange={e => setBedrooms(e.target.value)}
             placeholder="Bedrooms"
           />
 
           <input
             type="number"
             value={bathrooms}
-            onChange={e => setBathrooms(Number(e.target.value))}
+            onChange={e => setBathrooms(e.target.value)}
             placeholder="Bathrooms"
           />
         </div>
@@ -161,7 +141,6 @@ export default function App() {
 
         {price && (
           <div className="result">
-            {/* ✅ Updated Price Display */}
             <h2>{formatIndianPrice(price)}</h2>
             <p>
               {formatIndianPrice(range.min)} – {formatIndianPrice(range.max)}
@@ -187,9 +166,8 @@ export default function App() {
 
       </section>
 
-      {/* FOOTER UNTOUCHED */}
+      {/* Footer unchanged */}
       <footer className="footer">
-
         <div className="footer-divider"></div>
 
         <div className="footer-container">

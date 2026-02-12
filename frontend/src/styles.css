@@ -319,3 +319,14 @@ button:hover {
     padding: 15px 20px;
   }
 }
+/* Force input text visibility */
+input[type="number"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 500;
+}
+
+input::placeholder {
+  color: #9ca3af !important;
+  opacity: 1;
+}
