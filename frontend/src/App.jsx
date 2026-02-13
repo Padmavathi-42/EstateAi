@@ -12,8 +12,8 @@ import {
 export default function App() {
 
   const [area, setArea] = useState(1000);
-const [bedrooms, setBedrooms] = useState(2);
-const [bathrooms, setBathrooms] = useState(2);
+  const [bedrooms, setBedrooms] = useState(2);
+  const [bathrooms, setBathrooms] = useState(2);
   const [location, setLocation] = useState("");
   const [locations, setLocations] = useState([]);
   const [price, setPrice] = useState(null);
@@ -29,63 +29,49 @@ const [bathrooms, setBathrooms] = useState(2);
       .catch(err => console.error("Error fetching locations:", err));
   }, []);
 
-  // ✅ Always show in Lakhs / Crores only
+  // ✅ FIXED: Backend already sends values in Lakhs
   const formatIndianPrice = (value) => {
-  if (!value || value <= 0) return "₹ 0";
+    if (!value || value <= 0) return "₹ 0.00 Lakhs";
 
-  if (value >= 10000000) {
-    return `₹ ${(value / 10000000).toFixed(2)} Crores`;
-  } else {
-    return `₹ ${(value / 100000).toFixed(2)} Lakhs`;
-  }
-};
+    if (value >= 100) {
+      return `₹ ${(value / 100).toFixed(2)} Crores`;
+    } else {
+      return `₹ ${Number(value).toFixed(2)} Lakhs`;
+    }
+  };
 
   const predictPrice = async () => {
 
-  if (!area || !bedrooms || !bathrooms || !location) {
-    alert("Please fill all fields correctly.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await fetch(`${BASE_URL}/predict`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        area: Number(area),
-        bedrooms: Number(bedrooms),
-        bathrooms: Number(bathrooms),
-        location
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      alert(data.detail || "Prediction failed");
+    if (!area || !bedrooms || !bathrooms || !location) {
+      alert("Please fill all fields.");
       return;
     }
 
-    setPrice(data.predicted_price);
-    setRange({
-      min: data.min_price,
-      max: data.max_price
+    console.log("Sending to backend:", {
+      area,
+      bedrooms,
+      bathrooms,
+      location
     });
 
-  } catch (error) {
-    console.error(error);
-    alert("Server connection failed.");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
 
+      const response = await fetch(`${BASE_URL}/predict`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          area: Number(area),
+          bedrooms: Number(bedrooms),
+          bathrooms: Number(bathrooms),
+          location
+        })
+      });
 
       const data = await response.json();
+      console.log("Backend Response:", data);
 
       if (!response.ok) {
         alert(data.detail || "Prediction failed");
@@ -132,7 +118,7 @@ const [bathrooms, setBathrooms] = useState(2);
         <input
           type="number"
           value={area}
-          onChange={e => setArea(e.target.value)}
+          onChange={e => setArea(Number(e.target.value))}
           placeholder="Area (sq.ft)"
         />
 
@@ -140,14 +126,14 @@ const [bathrooms, setBathrooms] = useState(2);
           <input
             type="number"
             value={bedrooms}
-            onChange={e => setBedrooms(e.target.value)}
+            onChange={e => setBedrooms(Number(e.target.value))}
             placeholder="Bedrooms"
           />
 
           <input
             type="number"
             value={bathrooms}
-            onChange={e => setBathrooms(e.target.value)}
+            onChange={e => setBathrooms(Number(e.target.value))}
             placeholder="Bathrooms"
           />
         </div>
@@ -168,7 +154,7 @@ const [bathrooms, setBathrooms] = useState(2);
           {loading ? <div className="spinner"></div> : "Estimate Price"}
         </button>
 
-        {price && (
+        {price !== null && range && (
           <div className="result">
             <h2>{formatIndianPrice(price)}</h2>
             <p>
@@ -195,7 +181,6 @@ const [bathrooms, setBathrooms] = useState(2);
 
       </section>
 
-      {/* Footer unchanged */}
       <footer className="footer">
         <div className="footer-divider"></div>
 
@@ -246,7 +231,6 @@ const [bathrooms, setBathrooms] = useState(2);
         <div className="footer-bottom">
           © {new Date().getFullYear()} EstateAI. All rights reserved.
         </div>
-
       </footer>
 
     </div>
